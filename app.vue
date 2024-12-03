@@ -10,7 +10,7 @@
 <script setup lang="ts">
 useHead({
   titleTemplate: (titleChunk) => {
-    return titleChunk ? `${titleChunk} | Stefan's Personal Site` : "Stefan's Personal Site";
+    return titleChunk ? `${titleChunk} | Sjors's Personal Blog` : "Sjors's Personal Blog";
   }
 })
 </script>

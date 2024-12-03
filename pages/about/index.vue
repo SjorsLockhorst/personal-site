@@ -19,7 +19,7 @@ defineOgImageComponent("GeneralPage", {
 useSeoMeta({
   title: "about",
   ogTitle: "about",
-  description: "The personal blog of Stefan van der Weide. A software engineer and fullstack enthousiast",
-  ogDescription: "The personal blog of Stefan van der Weide. A software engineer and fullstack enthousiast",
+  description: "The personal blog of Sjors Lockhorst. An AI-engineer / fullstack software dev.",
+  ogDescription: "The personal blog of Sjors Lockhorst. An AI-engineer / fullstack software dev.",
 })
 </script>

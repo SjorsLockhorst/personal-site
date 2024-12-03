@@ -2,7 +2,7 @@
   <div v-if="post" class="w-full lg:w-1/2 justify-self-center min-h-screen">
     <div class="mb-12">
       <h1 class="text-4xl font-extrabold">{{ post.title }}</h1>
-      <span class="text-gray-500 text-sm">Stefan van der Weide | {{ new
+      <span class="text-gray-500 text-sm">Sjors Lockhorst | {{ new
         Date(post.date).toISOString().substring(0, 10)
         }}</span>
     </div>

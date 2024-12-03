@@ -1,18 +1,13 @@
 # About me
 
-I'm a full stack enthousiast currently working as a back end engineer at [Codebeez](https://codebeez.nl/) and doing freelance work under [Studio Terabyte](https://studioterabyte.nl/).
+Hi 👋! My name is Sjors and I'm a AI-engineer / fullstack software dev.
+I like to write software that uses AI in a creative way.
 
-I use 🐍 Python and 💻 Typescript professionally and have a personal interest in 🦀 Rust.
+I have a Master's degree in AI from the University of Utrecht.
+My thesis topic was detecting the outputs of LLMs, across domains, and under adversarial attack.
+The thesis can be found [here](https://studenttheses.uu.nl/handle/20.500.12932/46899).
 
-Some projects that I've finished are:
+My side projects include:
+- [artexplorer.ai](https://artexplorer.ai) 🎨, an AI supported search through all ~600.000 public art images of [Rijksmuseum](https://www.rijksmuseum.nl/en).
 
-- An alternative frontend for Hacker News → [Modern Orange](https://modernorange.io/)
-- A web app which helps you save, organize and plan you favorite recipes → [EatFeed](https://eatfeed.app/)
-- A website which shows you a random piece of art from the Amsterdam Rijks Museum → [Random Rijks](https://randomrijks.com/)
-
-And some ideas I'm currently working on:
-
-- A semantic search using NLP for art
-- A multiplayer game for the terminal
-
-If you want to know more about me or one of the projects (or if you want to collaborate), reach out at [hi@studioterabyte.nl](mailto:hi@studioterabyte.nl)
+If you're interested in hiring me, you can check my latest CV [here](/cv.pdf){target="_blank"}.
