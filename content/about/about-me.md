@@ -11,5 +11,3 @@ My side projects include:
 - [artexplorer.ai](https://artexplorer.ai) 🎨, an AI supported search through all ~600.000 public art images of [Rijksmuseum](https://www.rijksmuseum.nl/en).
 
 If you're interested in hiring me, you can check my latest CV [here](/cv.pdf){target="_blank"}.
-
-Testing 123
