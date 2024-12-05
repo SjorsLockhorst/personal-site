@@ -15,6 +15,7 @@ sitemap:
   loc: /projects/art-search
 title: A semantic search for artworks
 ---
+
 # Introducing [artexplorer.ai](https://artexplorer.ai)
 
 A search engine that lets you search through artworks based on a 'vibe', aka the meaning or semantics of a text.

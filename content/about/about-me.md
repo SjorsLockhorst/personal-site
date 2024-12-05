@@ -8,6 +8,6 @@ My thesis topic was detecting the outputs of LLMs, across domains, and under adv
 The thesis can be found [here](https://studenttheses.uu.nl/handle/20.500.12932/46899).
 
 My side projects include:
-- [artexplorer.ai](https://artexplorer.ai) 🎨, an AI supported search through all ~600.000 public art images of [Rijksmuseum](https://www.rijksmuseum.nl/en).
+- [artexplorer.ai](https://artexplorer.ai) 🎨, an AI supported search through all ~560,000 public art images of [Rijksmuseum](https://www.rijksmuseum.nl/en).
 
 If you're interested in hiring me, you can check my latest CV [here](/cv.pdf){target="_blank"}.

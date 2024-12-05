@@ -17,6 +17,10 @@ export default defineNuxtConfig({
       theme: "github-dark",
       preload: ["js", "python", "zsh", "rust", "yaml", "dockerfile"],
     },
+    markdown: {
+      remarkPlugins: ['remark-math'],
+      rehypePlugins: ['rehype-mathjax']
+    }
   },
   // plausible: {
   //   ignoredHostnames: ['localhost'],
