@@ -55,7 +55,7 @@ The user can now also do image-to-image search with one of the retrieved artwork
 
 ## ETL pipeline  🏗️
 
-![ETL pipeline schematic drawing](/images/projects/art-search/sem-art-etl-drawing.png)
+![ETL pipeline schematic drawing](/images/projects/art-search/etl-drawing.png)
 ### 1. API crawling  🕷️
 A pipeline was created to extract all metadata of images from the [Rijksmuseum API](https://data.rijksmuseum.nl/docs/api/).
 
