@@ -3,7 +3,7 @@
     <div class="mb-12">
       <NuxtImg class="w-full mb-12" :src="`/images/projects/${slug}/cover-image.png`" />
       <h1 class="text-4xl font-extrabold">{{ project.title }}</h1>
-      <span class="text-gray-500 text-sm">Sjors Lockhorst | {{ new
+      <span class="text-gray-500 text-sm">{{ project.author }} | {{ new
         Date(project.date).toISOString().substring(0, 10)
         }}</span>
     </div>
