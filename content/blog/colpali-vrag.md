@@ -45,6 +45,10 @@ To classify the image, they add a Multi Layer Perceptron (MLP) to the last hidde
 
 ### Unifying images and text
 
+All good and well that we can use the same architecture for image and text, but how can we get one model to understand both modalities?
+This is what CLIP proposed to do.
+
+
 ## Benefits
 
 ## Drawbacks
