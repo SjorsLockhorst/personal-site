@@ -22,8 +22,8 @@ export default defineNuxtConfig({
       rehypePlugins: ['rehype-mathjax']
     }
   },
-  // plausible: {
-  //   ignoredHostnames: ['localhost'],
-  //   apiHost: "https://stats.weidev.nl"
-  // }
+  plausible: {
+    ignoredHostnames: ['localhost'],
+    apiHost: "https://plausible.lockhorst.dev"
+  }
 })
