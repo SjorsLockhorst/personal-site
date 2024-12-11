@@ -39,6 +39,8 @@ Imagine this, you just finished your visit to the Amsterdam Rijksmuseum and you 
 
 You could go to [this website](https://randomrijks.com/) which shows you a random artwork from their collection, but that gives you about a 1/500.000 chance each time you request a new artwork. Not ideal. You also can go to [Rijksstudio](https://www.rijksmuseum.nl/nl/rijksstudio) and see if you can find the paiting by keyword or even color, but what if that doesn't work? Wouldn't it be great if you could just normal language, much like asking ChatGPT a question, to find what you are looking for? That is exactly what we thought!
 
+*Concurrently, Rijksmuseum had the same idea as us. They even also called it [Art explorer](https://www.rijksmuseum.nl/en/collection/art-explorer). Their approach is slightly different though, where they ask you a certain question, and you'll get artworks that match your answer. It's really fun, check it out!*
+
 ## How does it work?  🧰
 
 ### TLDR
@@ -135,21 +137,65 @@ This is a bog-standard endpoint that only returns the string `"ok"` and a `200` 
 
 Check out the [backend docs](https://backend.artexplorer.ai/docs) for the openAPI spec if you want more details.
 
-### TODO: Write about SQLModel and the pgvector python plugin
+#### Vector search using pgvector + SQLModel
 
-### Text-to-image search  📜  →  🖼️
+We used the pgvector extension for PostgreSQL to store and index vectors in regular tables.
+Then we use the amazing Python package [pgvector-python](https://github.com/pgvector/pgvector-python), providing us with a field we could directly use with [SQLModel](https://sqlmodel.tiangolo.com/).
+
+```python
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import Column
+from sqlmodel import Field, SQLModel
+
+class Embeddings(SQLModel, table=True):
+    id: int | None = Field(default=None, primary_key=True)
+    image: Any = Field(sa_column=Column(Vector(512)))
+    art_object_id: int = Field(foreign_key="artobjects.id", unique=True)
+```
+
+Then once we have obtained some vector, to which we want to find a the top-k closest neighbors, we can simply do:
+
+```python
+from sqlmodel import Session, select
+
+top_k = 10  # For example
+
+with Session(engine) as session:
+    nearest_artobjects = session.exec(
+        select(ArtObjects, Embeddings.image)
+        .order_by(Embeddings.image.cosine_distance(embedding))
+        .limit(top_k)
+        .join(ArtObjects)
+    ).all()
+
+return list(nearest_artobjects)
+
+```
+
+SQLModel is a relatively new package which hasn't fully matured yet. But we figured it was useful for our intents and purposes, since we stick to relatively simple operations.
+In our case it worked really well to keep our code clean, as the schema validation by pydantic and SQLAlchemy ORM objects are represented by one object.
+
+
+
+#### Text-to-image search  📜  →  🖼️
 
 When a user text query comes in, we simply embed it using the CLIP text model, and find the top-k nearest neighbors using `pgvector`.
 We pass the embeddings through our fitted PCA, which projects the embeddings down to (x, y), which the frontend uses to position the artwork.
 
-### Image-to-image search 🖼️ → 🖼️
+#### Image-to-image search 🖼️ → 🖼️
 
 The user passes us a unique `id` of an artwork. We use this to find the embedding of that artwork, and the top-k closest artworks. We again use PCA to obtain (x, y) for each artwork, and return all data.
 
 ### Performance tuning  🚀
 
+When you add a `Vector ` type to a table in Postgres, it doesn't add an index. This needs to be done seperately. 
 We use the [HSNW](https://en.wikipedia.org/wiki/Hierarchical_navigable_small_world) index that `pgvector` supports as a vector index.
-TODO: Add some stuff about the troubles we had here and how we ended up fixing it.
+The [readme file](https://github.com/pgvector/pgvector?tab=readme-ov-file#hnsw) of the repo explains how to set it up, which we followed. 
+We increased the `maintenance_memory` in `postgresql.conf`, but still couldn't use the full compute that we wanted.
+After lots of trial, error, and Googling, we found out, because we were running Postgres in a Docker container, which had a standard limit on the shared memory.
+Once we increased `shm_size` in our docker compose file, the index was created relatively quickly.
+The HSNW index is preferred over `ivvflat`, since it can grow along with the data in the database, thus scaling to more artworks that we could potentially add.
+
 
 ## Frontend  💻
 
