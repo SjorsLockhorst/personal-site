@@ -60,7 +60,7 @@ You can find the source code [here](https://github.com/SjorsLockhorst/sem-art-se
 
 ## ETL pipeline  🏗️
 
-<EnlargeImg src="/images/projects/art-search/etl-drawing.png" alt="ETL pipeline schematic drawing" />
+<EnlargeImg src="/images/projects/art-search/etl-drawing.png" alt="ETL pipeline schematic drawing"></EnlargeImg>
 
 *Drawing of the ETL pipeline, click to enlarge*
 
