@@ -233,7 +233,7 @@ Now, when a user submits a query and new artworks come in, we plot them in the p
 
 This works, because the backend scales the (x, y) to be within \[0, 1\], using [min max scaling](https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html).
 
-The images themself are not stored in our database. Rather we save a URL that points to a high quality version hosted by Google on their CDN. This is also how we did the image scaling discussed earlier. The URLs are provided by the Rijks Museum API that we scraped.
+The images themself are not stored in our database. Rather we save a URL that points to a high quality version hosted by Google on their CDN. This is also how we did the image scaling discussed earlier. The URLs are provided by the Rijksmuseum API that we scraped.
 
 ## Deployment  🌐
 
