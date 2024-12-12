@@ -24,6 +24,6 @@ export default defineNuxtConfig({
   },
   plausible: {
     ignoredHostnames: ['localhost'],
-    apiHost: "https://plausible.lockhorst.dev"
+    apiHost: process.env.NUXT_PLAUSIBLE_API_HOST,
   }
 })
