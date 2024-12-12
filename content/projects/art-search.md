@@ -58,17 +58,37 @@ You can find the source code [here](https://github.com/SjorsLockhorst/sem-art-se
 ![Training of CLIP](/images/projects/art-search/CLIP_training.png)
 *Image taken from [CLIP paper](https://arxiv.org/abs/2103.00020)*
 
-### ETL pipeline  🏗️
+## ETL pipeline  🏗️
 
-![ETL pipeline schematic drawing](/images/projects/art-search/etl-drawing.png)
+<EnlargeImg src="/images/projects/art-search/etl-drawing.png" alt="ETL pipeline schematic drawing" />
 
-#### 1. API Scarping  🕷️
+*Drawing of the ETL pipeline, click to enlarge*
 
-A pipeline was created to extract all metadata of images from the [Rijksmuseum API](https://data.rijksmuseum.nl/docs/api/).
+### 1. API Scarping  🕷️
 
-TODO: Stefan write a bit about your journey of writing this extraction and landing upon the XML api and stuff.
+To work with the vast collection of the [Rijksmuseum](https://data.rijksmuseum.nl/docs/api/) programmatically, we built a pipeline to extract metadata for all available images. Here’s a breakdown of the options we explored and how we landed on the optimal solution.
 
-#### 2. Image processing  🖼️ →  🤖  →  📊
+#### Initial Approach: Historical Data Dumps
+
+Our first thought was to use the Rijksmuseum's *Historical Data Dumps*. These dumps contain metadata for all objects in their collection, which seemed promising at first. However, the most recent data dump available was from 2020. While this would work for many use cases, we wanted the freshest data possible. So, the search continued.
+
+#### Exploring the Collection JSON API
+
+Next, we considered their *Collection JSON API*, accessible via `/api/{culture}/collection`. This endpoint allows fetching metadata in a convenient JSON format. However, there’s a catch: the API paginates results and imposes a limit of 10,000 records. To retrieve the entire collection, we’d need to split it into chunks of 10,000 or fewer records (by artist, decade, or other attributes). Since there was no straightforward way to achieve this (believe us, we tried), we kept this as a fallback option.
+
+#### The Jackpot: OAI-PMH API
+
+Finally, we found the *OAI-PMH API* (Open Archives Initiative Protocol for Metadata Harvesting). With **metadata harvesting** in the name, it was clear this was designed for our exact needs. This API delivers metadata in various XML formats. After querying the `GET /oai/[api-key]?verb=ListMetadataFormats` endpoint and testing all the available formats, we settled on `oai_WPCM` because it contained all the attributes we needed (e.g., image URL, artist name).
+
+#### Handling Pagination with `resumptionToken`
+
+To extract the data, we had to manage the `resumptionToken` mechanism. The API returns a batch of artworks (e.g., 25) along with a `resumptionToken`. This token is required for subsequent requests to fetch the next batch. Unfortunately, this sequential approach meant we couldn’t easily parallelize the requests to speed up the process. Instead, we kept things simple and wrote a script that repeatedly fetches artworks as long as the `resumptionToken` is provided.
+
+#### Future-Proofing the Code
+
+This implementation is tailored specifically for the Rijksmuseum API. However, we designed our codebase to handle additional sources in the future with minimal changes.
+
+### 2. Image processing  🖼️ →  🤖  →  📊
 
 Now that we have all metadata of the images we want to embed, we need to do four things.
 
@@ -82,13 +102,13 @@ Then each process:
 
 Each of these steps runs its own thread.
 
-##### Fetching artworks without embeddings  🖼️
+#### Fetching artworks without embeddings  🖼️
 
 Once we start the embedding phase, we do a simple SQL query, where we fetch all artworks that have no embedding yet.
 Then we divide these artworks over the total amount of processes n.
 We spawn n processes each with their own artworks to embed.
 
-##### Downloading the images ⬇️
+#### Downloading the images ⬇️
 
 Since we have quite a reasonable scale of ~560.000 images, we prefer this to be fast.
 Luckily all images are served via a Google CDN, which is blazingly fast as is.
@@ -110,7 +130,7 @@ The thread is essentially a consumer of `list[tuple[id, image_url]]` and a produ
 
 We fetch images [async](https://docs.python.org/3/library/asyncio.html) in batches of a configurable `retrieval_batch_size`, and put these images in a queue.
 
-#### 3. Embedding the images  🤖
+### 3. Embedding the images  🤖
 
 Embedding of the images is done by a thread that consumes items from the queue which is being filled by the image download thread.
 This thread thus consumes `list[tuple[id, image]]` and produces `list[tuple[id, embedding]]` by using CLIP.
@@ -118,11 +138,11 @@ This is again done in batches, which is configurable by `embedding_batch_size`.
 This thread will thus wait untill at least `embedding_batch_size` id image pairs are in the queue, and then start embedding the images.
 The results are put in another queue, which is read by the tread that commits the results to the database.
 
-#### 4. Store embeddings in vector database  🗄️
+### 4. Store embeddings in vector database  🗄️
 
 This thread simply reads each batch out of the previous queue, and commits them to the `pgvector` database.
 
-### Backend  🖥️
+## Backend  🖥️
 
 The backend is based on [FastAPI](https://fastapi.tiangolo.com/). It has the CLIP text model loaded in memory and embeds incoming text queries on CPU. Since it's a realivly light load, no GPU is needed for this. Other than that the API is pretty simple, wich was our goal. The API needed to get out of our way so that we could focus on the ETL pipeline. There are 3 GET routes:
 
@@ -137,7 +157,7 @@ This is a bog-standard endpoint that only returns the string `"ok"` and a `200` 
 
 Check out the [backend docs](https://backend.artexplorer.ai/docs) for the openAPI spec if you want more details.
 
-#### Vector search using pgvector + SQLModel
+### Vector search using pgvector + SQLModel
 
 We used the pgvector extension for PostgreSQL to store and index vectors in regular tables.
 Then we use the amazing Python package [pgvector-python](https://github.com/pgvector/pgvector-python), providing us with a field we could directly use with [SQLModel](https://sqlmodel.tiangolo.com/).
@@ -177,12 +197,12 @@ In our case it worked really well to keep our code clean, as the schema validati
 
 
 
-#### Text-to-image search  📜  →  🖼️
+### Text-to-image search  📜  →  🖼️
 
 When a user text query comes in, we simply embed it using the CLIP text model, and find the top-k nearest neighbors using `pgvector`.
 We pass the embeddings through our fitted PCA, which projects the embeddings down to (x, y), which the frontend uses to position the artwork.
 
-#### Image-to-image search 🖼️ → 🖼️
+### Image-to-image search 🖼️ → 🖼️
 
 The user passes us a unique `id` of an artwork. We use this to find the embedding of that artwork, and the top-k closest artworks. We again use PCA to obtain (x, y) for each artwork, and return all data.
 
@@ -238,8 +258,6 @@ As you can see, hosting a simple and fun AI application doesn't have to be expen
 This project was a huge learning experience for us! While we were already familiar with PostgreSQL, trying out pgvector was completely new. It was exciting to see how easily we could use it as a vector database. Postgres continues to prove itself as a great starting point for almost any project. You can always switch to a fancy use case specific database when your project needs it.
 
 We also dove deep into making Python more performant when handling heavy IO and compute tasks simultaneously. Our current approach combines multiprocessing, multithreading, and asynchronous IO. While it worked well performance-wise, it turned out to be pretty complex. In hindsight, using serverless workers might have been a better option. By passing batches (e.g., `list[tuple[id, image_url]]`) to individual workers, we could avoid explicit multiprocessing altogether, keeping the code simpler and easier to maintain.
-
-TODO: Add more here
 
 ## Future improvements  ✔️
 
