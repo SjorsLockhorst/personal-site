@@ -39,7 +39,10 @@ Imagine this, you just finished your visit to the Amsterdam Rijksmuseum and you 
 
 You could go to [this website](https://randomrijks.com/) which shows you a random artwork from their collection, but that gives you about a 1/500.000 chance each time you request a new artwork. Not ideal. You also can go to [Rijksstudio](https://www.rijksmuseum.nl/nl/rijksstudio) and see if you can find the paiting by keyword or even color, but what if that doesn't work? Wouldn't it be great if you could just normal language, much like asking ChatGPT a question, to find what you are looking for? That is exactly what we thought!
 
-*Concurrently, Rijksmuseum had the same idea as us. They even also called it [Art explorer](https://www.rijksmuseum.nl/en/collection/art-explorer). Their approach is slightly different though, where they ask you a certain question, and you'll get artworks that match your answer. It's really fun, check it out!*
+*__Side note__:*
+
+*It turns out the Rijksmuseum had a pretty similar idea to ours. Their take is a little different, though. They ask you a specific question and get artworks that matches your answer.*
+*One thing their version doesn't have though is our search by image feature. Still, [their tool](https://www.rijksmuseum.nl/en/collection/art-explorer) is super fun and worth checking out!*
 
 ## How does it work?  🧰
 
@@ -48,23 +51,25 @@ You could go to [this website](https://randomrijks.com/) which shows you a rando
 The art search leverages OpenAI's multi-modal vision and language model [CLIP](https://arxiv.org/abs/2103.00020) to embed images and texts in a shared [embedding space](https://en.wikipedia.org/wiki/Latent_space).
 We scrape the Rijksmuseum API, embed all images with the [CLIPVisionModel](https://huggingface.co/docs/transformers/model_doc/clip#transformers.CLIPVisionModelWithProjection) and store them in Postgres using [pgvector](https://github.com/pgvector/pgvector).
 When a user enters a text query, we embed their query using [CLIPTextModel](https://huggingface.co/docs/transformers/model_doc/clip#transformers.CLIPTextModelWithProjection).
-We use this text query embedding to search for the top-k nearest neighbours in our `pgvector` database. Before sending the response, we use [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html#sklearn.decomposition.PCA) to project down the CLIP embeddings from 512 dimensions to 2 dimensions (x, y) for visualization of the embedding space.
-
-The frontend displays the retrieved artworks in their respective places.
-The user can now also do image-to-image search with one of the retrieved artworks.
-
-You can find the source code [here](https://github.com/SjorsLockhorst/sem-art-search). Keep reading if you want to learn about the details!
 
 ![Training of CLIP](/images/projects/art-search/CLIP_training.png)
 *Image taken from [CLIP paper](https://arxiv.org/abs/2103.00020)*
 
+We use this text query embedding to search for the top-k nearest neighbours in our `pgvector` database. Before sending the response, we use [PCA](https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html#sklearn.decomposition.PCA) to project down the CLIP embeddings from 512 dimensions to 2 dimensions (x, y) for visualization of the embedding space.
+
+
+The frontend displays the retrieved artworks in their respective places.
+The user can now also do image-to-image search with any of the retrieved artworks.
+You can find the source code [here](https://github.com/SjorsLockhorst/sem-art-search). Keep reading if you want to learn about the details!
+
 ## ETL pipeline  🏗️
+
 
 <EnlargeImg src="/images/projects/art-search/etl-drawing.png" alt="ETL pipeline schematic drawing"></EnlargeImg>
 
 *Drawing of the ETL pipeline, click to enlarge*
 
-### 1. API Scarping  🕷️
+### 1. API Scraping  🕷️
 
 To work with the vast collection of the [Rijksmuseum](https://data.rijksmuseum.nl/docs/api/) programmatically, we built a pipeline to extract metadata for all available images. Here’s a breakdown of the options we explored and how we landed on the optimal solution.
 
@@ -126,7 +131,7 @@ This was very helpful, since we probably need a lower resolution for embedding, 
 For embedding, we settled on a resolution of `w1000`.
 
 Downloading of the images runs in its own thread. This is done so the downloading of images doesn't block the embedding of images, or saving of embeddings to database.
-The thread is essentially a consumer of `list[tuple[id, image_url]]` and a producer of `list[tuple[id, image]]`. There's no need to persist images to disk, so images always remain in-memory as bytes.
+The thread is essentially a consumer of `list[tuple[id, image_url]]` and a producer of `list[tuple[id, image]]`. There's no need to persist images to disk, so images always remain in-memory.
 
 We fetch images [async](https://docs.python.org/3/library/asyncio.html) in batches of a configurable `retrieval_batch_size`, and put these images in a queue.
 
@@ -140,17 +145,17 @@ The results are put in another queue, which is read by the tread that commits th
 
 ### 4. Store embeddings in vector database  🗄️
 
-This thread simply reads each batch out of the previous queue, and commits them to the `pgvector` database.
+This thread simply reads each of embeddings batch from the previous queue, and commits them to the `pgvector` database.
 
 ## Backend  🖥️
 
-The backend is based on [FastAPI](https://fastapi.tiangolo.com/). It has the CLIP text model loaded in memory and embeds incoming text queries on CPU. Since it's a realivly light load, no GPU is needed for this. Other than that the API is pretty simple, wich was our goal. The API needed to get out of our way so that we could focus on the ETL pipeline. There are 3 GET routes:
+The backend is based on [FastAPI](https://fastapi.tiangolo.com/). It has the CLIP text model loaded in memory and embeds incoming text queries on CPU. Since it's a relatively light load, no GPU is needed for this. Other than that the API is pretty simple, wich was our goal. The API needed to get out of our way so that we could focus on the ETL pipeline. There are 3 GET routes:
 
 1. `/query`
 This endpoint takes a query entered by a user on the frontend, embeds it and finds the best match in our database
 
 2. `/image`
-This one is a bit more interesting! It takes the index of an image that is currently displayed on the frontend, such as `321`, and find images that are closley related to the image corresponding to the index. This is how we facilitate the "search using this image" functionatlity.
+This one is a bit more interesting! It takes the index of an image that is currently displayed on the frontend, such as `321`, and find images that are closely related to the image corresponding to the index. This is how we facilitate the "search using this image" functionatlity.
 
 3. `/health`
 This is a bog-standard endpoint that only returns the string `"ok"` and a `200` status code. It's used during development and is useful if you quickly need to check if the API is still up and running.
@@ -208,22 +213,22 @@ The user passes us a unique `id` of an artwork. We use this to find the embeddin
 
 ### Performance tuning  🚀
 
-When you add a `Vector ` type to a table in Postgres, it doesn't add an index. This needs to be done seperately. 
+When you add a `Vector` type to a table in Postgres, it doesn't add an index. This needs to be done separately. 
 We use the [HSNW](https://en.wikipedia.org/wiki/Hierarchical_navigable_small_world) index that `pgvector` supports as a vector index.
 The [readme file](https://github.com/pgvector/pgvector?tab=readme-ov-file#hnsw) of the repo explains how to set it up, which we followed. 
 We increased the `maintenance_memory` in `postgresql.conf`, but still couldn't use the full compute that we wanted.
 After lots of trial, error, and Googling, we found out, because we were running Postgres in a Docker container, which had a standard limit on the shared memory.
 Once we increased `shm_size` in our docker compose file, the index was created relatively quickly.
-The HSNW index is preferred over `ivvflat`, since it can grow along with the data in the database, thus scaling to more artworks that we could potentially add.
+We preferred the `HSNW` over `ivvflat`, since it can grow along with the data in the database, thus scaling to more artworks that we could potentially add.
 
 
 ## Frontend  💻
 
-For the frontend, we have gone for [Nuxt](https://nuxt.com/) with [Tailwind](https://tailwindcss.com/) for the styling. We both have quite some experience with Vue and Nuxt and it's a pleasure to work with! The ecosystem it also maturing so there are quite a few official libraries availble that help simplify boilerplate such as dealing with images, fonts and styling.
+For the frontend, we have gone for [Nuxt](https://nuxt.com/) with [Tailwind](https://tailwindcss.com/) for the styling. We both have quite some experience with Vue and Nuxt and it's a pleasure to work with! The ecosystem it's also maturing, so there are quite a few official libraries available that help simplify boilerplate such as dealing with images, fonts and styling.
 
-The main interactive canvas is powered by [pixi.js](https://pixijs.com/). It renders all the images and animations and is chosen for its speed and ease of use. Since users can spawn quite a few images at the same time we needed it to be powerful and easy to optimize. For the interactive element of the canvas we used [pixi-viewport](https://github.com/pixi-viewport/pixi-viewport) as a viewport to allow scrolling and zooming with both a mouse and keyboard and with your fingers when visiting on a mobile device.
+The main interactive canvas is powered by [PixiJS](https://pixijs.com/). It renders all the images and animations and is chosen for its speed and ease of use. Since users can spawn quite a few images at the same time we needed it to be powerful and easy to optimize. For the interactive element of the canvas we used [pixi-viewport](https://github.com/pixi-viewport/pixi-viewport) as a viewport to allow scrolling and zooming with both a mouse, keyboard and touchscreen on mobile devices.
 
-Finally, we realized we need to be able to cull images. Culling is a technique where you check which images are currently visible to the user and only render those. So if there are 100 images loaded on the frontend, but the user has zoomed in and can currently only see 20, we simply don't render the remaining 80. This gave us a massive performance boost! In order to do this in pixijs, we used [pixi-cull](https://github.com/pixi-viewport/pixi-cull). The only downside was that the newest version of pixijs was not supported by pixi-cull so we had to port the culling algoritm ourselves.
+Finally, we realized we need to be able to cull images. Culling is a technique where you check which images are currently visible to the user and only render those. So if there are 100 images loaded on the frontend, but the user has zoomed in and can currently only see 20, we simply don't render the remaining 80. This gave us a massive performance boost! In order to do this in PixiJS, we used [pixi-cull](https://github.com/pixi-viewport/pixi-cull). The only downside was that the newest version of PixiJS was not supported by pixi-cull so we had to port the culling algorithm ourselves.
 
 Now, when a user submits a query and new artworks come in, we plot them in the pixi canvas, at point:
 
@@ -237,12 +242,11 @@ The images themself are not stored in our database. Rather we save a URL that po
 
 ## Deployment  🌐
 
-For deployment, we went with [Dokploy](https://dokploy.com/), an open-source, self-hostable alternative to platforms like Heroku, Vercel, and Netlify. We set it up on a [Hetzner](https://www.hetzner.com/) VPS because their servers are cheap, reliable, and Dokploy has guides specifically for Hetzner—so it was a no-brainer.
+For deployment, we went with [Dokploy](https://dokploy.com/), an open-source, self-hostable alternative to platforms like Heroku, Vercel, and Netlify. We set it up on a [Hetzner](https://www.hetzner.com/) VPS because their servers are cheap and reliable.
 
 Our setup is a monolith hosting the PostgreSQL database, frontend, and backend all in one. If we need to scale, we can either upgrade to a beefier VPS or add more servers and set up Docker Swarm for autoscaling. For now, though, that’s overkill for a hobby project.
 
-Dokploy uses [Nixpacks](https://nixpacks.com/), which made deploying super smooth. It handles backend builds (even spinning up our ML model) without needing Dockerfiles. Plus, it supports zero-downtime deployments, so updates don’t interrupt anything.
-
+Dokploy uses [Nixpacks](https://nixpacks.com/), which made deploying super smooth. It handles backend builds without needing Dockerfiles. Plus, it supports easy to setup zero-downtime deployments with Docker Swarm.
 Overall, Dokploy + Hetzner turned out to be a simple, affordable, and solid choice for our needs.
 
 ## Total cost 💰
@@ -255,18 +259,20 @@ As you can see, hosting a simple and fun AI application doesn't have to be expen
 
 ## What we learned  🧑  🎓
 
-This project was a huge learning experience for us! While we were already familiar with PostgreSQL, trying out pgvector was completely new. It was exciting to see how easily we could use it as a vector database. Postgres continues to prove itself as a great starting point for almost any project. You can always switch to a fancy use case specific database when your project needs it.
+This project was a huge learning experience for us! While we were already familiar with PostgreSQL, trying out `pgvector` was completely new. It was exciting to see how easily we could use it as a vector database. Postgres continues to prove itself as a great starting point for almost any project. You can always switch to a fancy use case specific database when your project needs it.
 
 We also dove deep into making Python more performant when handling heavy IO and compute tasks simultaneously. Our current approach combines multiprocessing, multithreading, and asynchronous IO. While it worked well performance-wise, it turned out to be pretty complex. In hindsight, using serverless workers might have been a better option. By passing batches (e.g., `list[tuple[id, image_url]]`) to individual workers, we could avoid explicit multiprocessing altogether, keeping the code simpler and easier to maintain.
-This would probably be worth the extra overhead of starting and stopping the workers. 
+This would probably be worth some extra overhead of starting and stopping the workers. 
 
 ## Future improvements  ✔️
 
 While the project is finished for now, there are a couple of things we like to do in the (near)future:
 
+- [ ] Automate the triggering of our ETL pipeline using a tool such as Dagster
 - [ ] Find publicly available art API's to scrape (The Met in New York seems like a good next candidate)
   - [ ] Write an API wrapper for the new sources
   - [ ] Rerun pipeline and embed the new images
 
-- [ ] Automate the triggering of our ETL pipeline using a tool such as Dagster
 - [ ] Experiment with other dimension reduction algorithms like [umap](https://umap-learn.readthedocs.io/en/latest/)
+- [ ] Persist the 2D coordinates from dimension reduction rather than always calculating them on the fly on API calls
+
