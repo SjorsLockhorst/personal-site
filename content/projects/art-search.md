@@ -4,7 +4,7 @@ aliases: []
 tags: []
 category: project
 coverImage: cover-image.png
-date: "2024-12-05"
+date: "2024-12-13"
 description: Find artworks based on a "vibe"
 ogImage:
   component: BlogPost
