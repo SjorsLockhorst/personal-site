@@ -263,6 +263,8 @@ This project was a huge learning experience for us! While we were already famili
 
 We also dove deep into making Python more performant when handling heavy IO and compute tasks simultaneously. Our current approach combines multiprocessing, multithreading, and asynchronous IO. While it worked well performance-wise, it turned out to be pretty complex. In hindsight, using serverless workers might have been a better option. By passing batches (e.g., `list[tuple[id, image_url]]`) to individual workers, we could avoid explicit multiprocessing altogether, keeping the code simpler and easier to maintain.
 This would probably be worth some extra overhead of starting and stopping the workers. 
+## You made it to the end!
+Here is the [code](https://github.com/SjorsLockhorst/sem-art-search), to the [artexplorer](https://artexplorer.ai) in case you want to check it out.
 
 ## Future improvements  ✔️
 
