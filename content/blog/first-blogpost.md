@@ -2,7 +2,7 @@
 title: "I'm starting a blog!"
 description: 'My first blogpost'
 path: /blog/first-blogpost
-date: 2024-12-5
+date: 2024-12-05
 category: announcement
 ogImage:
   component: BlogPost
