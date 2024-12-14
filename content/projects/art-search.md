@@ -120,7 +120,11 @@ Luckily all images are served via a Google CDN, which is blazingly fast as is.
 We considered downloading and saving images to an object storage like S3, but we figured that fetching the images from Google CDN directly is simpler.
 Additionally, the Google CDN allows you to control the resolution of the image by a query parameter.
 
-Consider the following example URL: `https://lh3.googleusercontent.com/ZYQ7IcfJ45yQOPnmhzBkZK2mc2F_e7bUMDgKaY-miSl0f8y3o-Q--H3R81q-2q1cfqFqoDlDgyLDW3OHJqin_ugnB_KRIfZaV-9xX2Y=s0`
+Consider the following example URL: 
+
+
+```https://lh3.googleusercontent.com/-ZYQ7IcfJ45yQOPnmhzBkZK2mc2F_e7bUMDgKaY-miSl0f8y3o-Q--H3R81q-2q1cfqFqoDlDgyLDW3OHJqin_ugnB_KRIfZaV-9xX2Y=s0```
+
 Notice how URL ends with `=s0`. This means the image is returned in full original resolution.
 
 ![An example artwork, image of a wooden cabinet](https://lh3.googleusercontent.com/ZYQ7IcfJ45yQOPnmhzBkZK2mc2F_e7bUMDgKaY-miSl0f8y3o-Q--H3R81q-2q1cfqFqoDlDgyLDW3OHJqin_ugnB_KRIfZaV-9xX2Y=s0)
